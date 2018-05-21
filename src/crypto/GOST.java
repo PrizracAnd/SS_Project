@@ -102,7 +102,7 @@ public class GOST {
     public long getDataBlock() {
         clearHi();
         this.dataBlock ^= this.dataBlock;       // очищаем переменнную
-        this.dataBlock |= this.nH >>> 32;       // заполням сначала из старшей части со здвигом на 32 разряда
+        this.dataBlock |= this.nH << 32;        // заполням сначала из старшей части со здвигом на 32 разряда
         this.dataBlock |= this.nL;
 
         return dataBlock;
