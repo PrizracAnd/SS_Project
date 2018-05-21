@@ -1,4 +1,4 @@
-
+package db_support;
 
 
 import java.sql.*;
@@ -49,9 +49,9 @@ class MakeDBFile implements IConstants {
     private Statement setConnection(){
         try {
             // loads a class, including running its static initializers
-            Class.forName(DRIVER_NAME);
+            Class.forName(IConstants.DRIVER_NAME);
             // attempts to establish a connection to the given database URL
-            this.connection = DriverManager.getConnection(SQLITE_DB);
+            this.connection = DriverManager.getConnection(IConstants.SQLITE_DB);
             // сreates an object for sending SQL statements to the database
             return connection.createStatement();
         }catch (Exception ex){

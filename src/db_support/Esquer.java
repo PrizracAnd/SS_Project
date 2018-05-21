@@ -1,4 +1,4 @@
-import com.sun.istack.internal.Nullable;
+package db_support;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -6,15 +6,14 @@ import java.util.List;
 
 public class Esquer implements IConstants {
 
-
     private Connection connection;
 
     private Statement setConnection(){
         try {
             // loads a class, including running its static initializers
-            Class.forName(DRIVER_NAME);
+            Class.forName(IConstants.DRIVER_NAME);
             // attempts to establish a connection to the given database URL
-            this.connection = DriverManager.getConnection(SQLITE_DB);
+            this.connection = DriverManager.getConnection(IConstants.SQLITE_DB);
             // сreates an object for sending SQL statements to the database
             return connection.createStatement();
         }catch (Exception ex){
@@ -32,7 +31,7 @@ public class Esquer implements IConstants {
     }
 
 //    public long insertRecord(String login, @Nullable String ip_address, boolean isWork){
-    public void insertRecord(Account account){  // <-- сразу передаем в метод объект Account
+    public void insertRecord(Account account){  // <-- сразу передаем в метод объект db_support.Account
         long id = -1;
 
         if(account.getUserName() == null){     // <-- доп проверка, если имя пользователя пустое, то сразу возвращаем -1 и выходим из метода

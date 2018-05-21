@@ -1,11 +1,13 @@
+package db_support;
+
 /**
- * Description of interface IConstants.
+ * Description of interface db_support.IConstants.
  *
  * @author Andrey Demjanov
  * @version dated Jan 18, 2018
  * @link NULL
  */
-interface IConstants {
+public interface IConstants {
     final String DRIVER_NAME = "org.sqlite.JDBC";
     final String SQLITE_DB = "jdbc:sqlite:cryptoSystem.db";
     final String SERVER_ADDR = "localhost"; // server net name or "127.0.0.1"
