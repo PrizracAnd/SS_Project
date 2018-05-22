@@ -1,5 +1,7 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 interface RW_Listener{
@@ -133,4 +135,71 @@ public class RW_Prep {
         }
     }
 
+    public List<Long> readFileBit(String pathName){
+        boolean l = false;
+        List<Long> longList = new ArrayList<Long>();
+
+        File file = new File(pathName);
+        try(FileInputStream fi = new FileInputStream(file);
+                BufferedInputStream bi = new BufferedInputStream(fi)) {
+
+            byte[] bt = new byte[(int)file.length()];
+            while ((bi.read(bt)) != -1){
+                int i = 0;
+                while (i < bt.length) {
+                    long l64 = 0;
+                    while (i < bt.length) {
+                        l64 |= (long) bt[i] << (8 * (i % 8));
+                        i++;
+                        if ((i % 8) == 0) break;
+                    }
+                    longList.add(l64);
+                }
+            }
+            l = true;
+        }catch (IOException e){
+            e.printStackTrace();
+            l = false;
+            longList.removeAll(longList);
+        }finally {
+            RW_Listener.readSuccess(l);
+        }
+
+        return longList;
+    }
+
+    public void writeFileBit(String pathName, List<Long> longList){
+        boolean l = false;
+
+        try(FileOutputStream fo = new FileOutputStream(new File(pathName));
+                BufferedOutputStream bo = new BufferedOutputStream(fo)) {
+
+            List<Byte> byteList = new ArrayList<Byte>();
+            for (long itemLong: longList){
+//                byte[] bt = new byte[8];
+                for (int i = 0; i < 8; i++){
+                    byteList.add((byte)((itemLong >> (8 * i)) % 256));
+                }
+            }
+
+            for (int i = byteList.size() - 1; i > -1; i --){
+                if(byteList.get(i) == 0){
+                    byteList.remove(i);
+                }else break;
+            }
+
+            byte[] bt = new byte[byteList.size()];
+            for(int i = 0; i < byteList.size(); i++){
+                bt[i] = byteList.get(i);
+            }
+
+            bo.write(bt);
+
+        }catch (IOException e){
+            e.printStackTrace();
+            l = false;
+        }finally {
+            RW_Listener.writeSuccess(l);
+        }
+    }
 }
