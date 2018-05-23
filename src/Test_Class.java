@@ -1,5 +1,7 @@
 import crypto.GOST;
 
+import java.security.SecureRandom;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Test_Class {
@@ -10,7 +12,8 @@ public class Test_Class {
         do {
             System.out.println("Please select the test:");
             System.out.println("0\t ---exit;");
-            System.out.println("1\t ---GOST.");
+            System.out.println("1\t ---GOST;");
+            System.out.println("2\t ---Graphic test of random.");
 
             i = cs.nextInt();
             switch (i){
@@ -19,10 +22,60 @@ public class Test_Class {
                 case 1:
                     testGOST();
                     break;
+                case 2:
+                    testRandomGraphic();
                 default:
                     break;
             }
         }while (i != 0);
+    }
+
+    private static void testRandomGraphic() {
+        int col = 100;
+
+        //Names of random:
+        String nameA = "Random";
+        String nameB = "SecureRandom (Java)";
+//        String nameC = "SecureRandom (Sun Security Provider)";
+
+        //Randoms:
+        Random rd = new Random();
+        SecureRandom srj = new SecureRandom();
+//        sun.security.provider.SecureRandom srssp = new sun.security.provider.SecureRandom();
+
+        //Arrays:
+        int[] a = new int[col];
+        int[] b = new int[col];
+        int[] c = new int[col];
+
+        //Initialization arrays:
+        for (int i = 0; i < col; i++){
+            a[i] = rd.nextInt(10);
+            b[i] = srj.nextInt(10);
+
+//            c[i] = -1;
+//            while (c[i] < 0) {
+//                byte[] bt = new byte[1];
+//                srssp.engineNextBytes(bt);
+//                int kh = (bt[0] & 15);
+//                if(kh < 10){
+//                   c[i] = kh;
+//                }else {
+//                    kh = (bt[0] >>> 4);
+//                    if(kh < 10) {
+//                        c[i] = kh;
+//                    }
+//                }
+//            }
+
+        }
+
+        //Testing:
+        GraphicTestOfRandom gtr = new GraphicTestOfRandom();
+
+        gtr.test(nameA, a);
+        gtr.test(nameB, b);
+//        gtr.test(nameC, c);
     }
 
     private static void testGOST() {
