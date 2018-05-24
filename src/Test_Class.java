@@ -23,59 +23,12 @@ public class Test_Class {
                     testGOST();
                     break;
                 case 2:
-                    testRandomGraphic();
+                    graphicTest();
+                    break;
                 default:
                     break;
             }
         }while (i != 0);
-    }
-
-    private static void testRandomGraphic() {
-        int col = 100;
-
-        //Names of random:
-        String nameA = "Random";
-        String nameB = "SecureRandom (Java)";
-//        String nameC = "SecureRandom (Sun Security Provider)";
-
-        //Randoms:
-        Random rd = new Random();
-        SecureRandom srj = new SecureRandom();
-//        sun.security.provider.SecureRandom srssp = new sun.security.provider.SecureRandom();
-
-        //Arrays:
-        int[] a = new int[col];
-        int[] b = new int[col];
-        int[] c = new int[col];
-
-        //Initialization arrays:
-        for (int i = 0; i < col; i++){
-            a[i] = rd.nextInt(10);
-            b[i] = srj.nextInt(10);
-
-//            c[i] = -1;
-//            while (c[i] < 0) {
-//                byte[] bt = new byte[1];
-//                srssp.engineNextBytes(bt);
-//                int kh = (bt[0] & 15);
-//                if(kh < 10){
-//                   c[i] = kh;
-//                }else {
-//                    kh = (bt[0] >>> 4);
-//                    if(kh < 10) {
-//                        c[i] = kh;
-//                    }
-//                }
-//            }
-
-        }
-
-        //Testing:
-        GraphicTestOfRandom gtr = new GraphicTestOfRandom();
-
-        gtr.test(nameA, a);
-        gtr.test(nameB, b);
-//        gtr.test(nameC, c);
     }
 
     private static void testGOST() {
@@ -110,5 +63,56 @@ public class Test_Class {
 
 
 
+    }
+
+    private static void graphicTest() {
+        //Count of random numbers:
+        int col = 100;
+
+        //Graphic Test:
+        GraphicTestOfRandom gtr = new GraphicTestOfRandom();
+
+        //Names of random:
+        String nameA = "Random";
+        String nameB = "SecureRandom (Java)";
+        String nameC = "SecureRandom (Sun Security Provider)";
+
+        //Randoms:
+        Random rd = new Random();
+        SecureRandom srj = new SecureRandom();
+        sun.security.provider.SecureRandom srssp = new sun.security.provider.SecureRandom();
+
+        //Arrays:
+        int[] a = new int[col];
+        int[] b = new int[col];
+        int[] c = new int[col];
+
+        //Preparing arrays:
+        for (int i = 0; i < col; i++){
+            //Random:
+            a[i] = rd.nextInt(10);
+
+            //SecureRandom Java:
+            b[i] = srj.nextInt(10);
+
+            //SecureRandom SSP:
+            c[i] = -1;
+            while (c[i] < 0 || c[i] > 9){
+                byte[] bt = new byte[1];
+                srssp.engineNextBytes(bt);
+                c[i] = bt[0] & 15;
+                if(c[i] < 0 || c[i] > 9){
+                    c[i] = bt[0] >>> 4;
+                }
+            }
+        }
+
+        //Output MAN information:
+        gtr.printMan();
+
+        //Test Random:
+        gtr.test(nameA, a);
+        gtr.test(nameB, b);
+        gtr.test(nameC, c);
     }
 }
