@@ -3,7 +3,7 @@ import java.util.List;
 
 public class GraphicTestOfRandom {
     public final static String MAN =
-                    "Тест «Распределение на плоскости» позволяет оценить случайность и независимость чисел случайной последовательности.\n" +
+            "Тест «Распределение на плоскости» позволяет оценить случайность и независимость чисел случайной последовательности.\n" +
                     "Принцип данного теста заключается в том, что на координатной плоскости проставляются точки,\n" +
                     "координатами для каждой точки служат числа случайной последовательности по принципу: точка An(n, n+1),\n" +
                     "где n – элемент случайной последовательности чисел. Если в результате проведения теста расположение точек на плоскости хаотично,\n" +
@@ -28,6 +28,14 @@ public class GraphicTestOfRandom {
     /////////////////////////////////////////////////////////
     public GraphicTestOfRandom(){
         //prepare arrays
+//        prepareArrays();
+
+    }
+
+    //////////////////////////////////////////////////////////
+    ///  Method prepareArrays
+    /////////////////////////////////////////////////////////
+    private void prepareArrays(){
         for (int i = 0; i < 10; i++){
             this.b[i] = 0;
             for (int j = 0; j < 10; j++){
@@ -35,7 +43,6 @@ public class GraphicTestOfRandom {
             }
         }
     }
-
 
     //////////////////////////////////////////////////////////
     ///  Method test
@@ -45,6 +52,7 @@ public class GraphicTestOfRandom {
         int x = 0, y;
 
         this.Name = nameOfTest;
+        prepareArrays();
 
         while (i < rnd.length){
             if (rnd[i] > -1 && rnd[i] < 10){
@@ -144,3 +152,5 @@ public class GraphicTestOfRandom {
         rwp.writeFile(pathName, this.stringList);
     }
 }
+
+

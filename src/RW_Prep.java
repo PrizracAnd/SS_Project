@@ -11,7 +11,7 @@ interface RW_Listener{
 }
 
 public class RW_Prep {
-    public final static int CODENUMBER = 6;
+    public final static int CODENUMBER = 1;
 
     public final static String[] CODE = new String[] {
             "ASCII"          //0
