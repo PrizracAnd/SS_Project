@@ -114,4 +114,15 @@ public class GOST {
         this.nH = dataBlock >>> 32;     // заполняем старшую чать (т.к. сдвиг с заполнением нулями, должно прокатить и так)
         clearHi();
     }
+
+    public long getEncryptDataBlock(){
+        encrypt32();
+        return getDataBlock();
+    }
+
+    public long getDecryptDataBlock(){
+        decrypt32();
+        return getDataBlock();
+    }
+
 }
