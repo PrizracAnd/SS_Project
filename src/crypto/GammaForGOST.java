@@ -15,22 +15,23 @@ public class GammaForGOST {
 
 
     //-----Text begin---------------
-    List<Long> textList;
+    protected List<Long> textList;
     //-----Text end-----------------
 
     //-----Synchrony post begin-----
-    List<Long> spList;
-    private final static long C232 = 4294967296L;
-    private final static long C1 = 1010101L;
-    private final static long C2 = 1010104L;
+    protected long synchronizedPost;
+    protected boolean noSynchronizedPost = true;
+    public final static long C232 = 4294967296L;
+    public final static long C1 = 1010101L;
+    public final static long C2 = 1010104L;
     //-----Synchrony post end-------
 
     //-----Keys begin---------------
-    long[] keys;
+    protected long[] keys;
     //-----Keys end-----------------
 
     //-----Sbox begin-----------------
-    int[][] sBox;
+    protected int[][] sBox;
     //-----Sbox end-----------------
 
 
@@ -75,28 +76,29 @@ public class GammaForGOST {
     }
 
     //-----Constructors with Synchronize post
-    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, List<Long> spList){
+    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, long synchronizedPost){
         this(textList, keys, sBox);
 
-        this.spList = spList;
+        setSP(synchronizedPost);
+
     }
 
-    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, List<Long> spList, Random rd){
+    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, long synchronizedPost, Random rd){
         this(textList, keys, sBox, rd);
 
-        this.spList = spList;
+        setSP(synchronizedPost);
     }
 
-    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, List<Long> spList, SecureRandom srj){
+    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, long synchronizedPost, SecureRandom srj){
         this(textList, keys, sBox, srj);
 
-        this.spList = spList;
+        setSP(synchronizedPost);
     }
 
-    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, List<Long> spList, sun.security.provider.SecureRandom srssp){
+    public GammaForGOST(List<Long> textList, long[] keys, int[][] sBox, long synchronizedPost, sun.security.provider.SecureRandom srssp){
         this(textList, keys, sBox, srssp);
 
-        this.spList = spList;
+        setSP(synchronizedPost);
     }
     //-----Constructors end---------
 
@@ -104,44 +106,81 @@ public class GammaForGOST {
     //////////////////////////////////////////////////////////
     ///  Method getSP
     /////////////////////////////////////////////////////////
-    private List<Long> getSP(){
-        List<Long> longList = new ArrayList<Long>();
+    protected long getSP(){
+        long sp = 0;
 
         switch (this.randomCode){
             case 0:
                 if(this.rd != null){
-                    for (int i = 0; i < this.textList.size(); i++){
-                        longList.add(rd.nextLong());
-                    }
+                    sp = rd.nextLong();
                 }
+
                 break;
             case 1:
                 if(this.srj != null){
-                    for (int i = 0; i < this.textList.size(); i++){
-                        longList.add(srj.nextLong());
-                    }
+                    sp =srj.nextLong();
                 }
                 break;
             case 2:
                 if(this.srssp != null){
-                    for (int i = 0; i < this.textList.size(); i++){
-                        byte[] bytes = new byte[8];
-                        srssp.engineNextBytes(bytes);
 
-                        long lg = 0;
-                        for (int j = 0; j < 8; j++){
-                            lg |= (long)(bytes[j] << (j * 8));
-                        }
-                        longList.add(lg);
+                    byte[] bytes = new byte[8];
+                    srssp.engineNextBytes(bytes);
+
+                    long lg = 0;
+                    for (int j = 0; j < 8; j++){
+                        lg |= (long)(bytes[j] << (j * 8));
                     }
+                    sp =lg;
                 }
                 break;
             default:
+                this.randomCode = 0;
+                this.rd = new Random();
+                sp = rd.nextLong();
                 break;
         }
 
-        return longList;
+        return sp;
     }
+//    private List<Long> getSP(){
+//        List<Long> longList = new ArrayList<Long>();
+//
+//        switch (this.randomCode){
+//            case 0:
+//                if(this.rd != null){
+//                    for (int i = 0; i < this.textList.size(); i++){
+//                        longList.add(rd.nextLong());
+//                    }
+//                }
+//                break;
+//            case 1:
+//                if(this.srj != null){
+//                    for (int i = 0; i < this.textList.size(); i++){
+//                        longList.add(srj.nextLong());
+//                    }
+//                }
+//                break;
+//            case 2:
+//                if(this.srssp != null){
+//                    for (int i = 0; i < this.textList.size(); i++){
+//                        byte[] bytes = new byte[8];
+//                        srssp.engineNextBytes(bytes);
+//
+//                        long lg = 0;
+//                        for (int j = 0; j < 8; j++){
+//                            lg |= (long)(bytes[j] << (j * 8));
+//                        }
+//                        longList.add(lg);
+//                    }
+//                }
+//                break;
+//            default:
+//                break;
+//        }
+//
+//        return longList;
+//    }
 
 
     //////////////////////////////////////////////////////////
@@ -149,34 +188,43 @@ public class GammaForGOST {
     /////////////////////////////////////////////////////////
     public List<Long> cryptForGama(){
         List<Long> encryptText = new ArrayList<Long>();
-//        List<Long> gamaList = new ArrayList<Long>();
 
-        if(this.spList == null){
-            this.spList = getSP();
+
+        if(this.noSynchronizedPost){
+            setSP(getSP());
         }
 
-        if(this.spList.size() > 0) {
-            long sp = this.spList.get(0);
-            for(long item: this.textList){
-                long nL = ((sp & (C232 - 1)) + C1) & (C232 - 1);                        //выполняем приращение sp
-                long nH = ((sp >>> 32) + C2) & (C232 - 1);                              //--||--
-                sp = (nH << 32) | nL;                                                   //--||--
 
-                long gama = new GOST(sp, this.keys, this.sBox).getEncryptDataBlock();   //получаем гаму через ГОСТ
-                encryptText.add(gama ^ item);                                           //складываем гаму с текстом по модулю 2
-            }
+        long sp = this.synchronizedPost;
+        for(long item: this.textList){
+            long nL = ((sp & (C232 - 1)) + C1) & (C232 - 1);                        //выполняем приращение sp
+            long nH = ((sp >>> 32) + C2) & (C232 - 1);                              //--||--
+            sp = (nH << 32) | nL;                                                   //--||--
+
+            long gama = new GOST(sp, this.keys, this.sBox).getEncryptDataBlock();   //получаем гаму через ГОСТ
+            encryptText.add(gama ^ item);                                           //складываем гаму с текстом по модулю 2
         }
-//        for (int i = 0; i < this.spList.size(); i++){
-//            if(i >= this.textList.size()) break;            //выходим из цикала, чтоб не вывалиться.
-//
-//            long gama = new GOST(this.spList.get(i), this.keys, this.sBox).getEncryptDataBlock();   //получаем гаму через ГОСТ
-//            encryptText.add(gama ^ this.textList.get(i));                                           //складываем гаму с текстом по модулю 2
-//        }
 
         return encryptText;
     }
 
-    public List<Long> getSpList() {
-        return spList;
+
+
+//    public List<Long> getSpList() {
+//        return spList;
+//    }
+
+    public long getSynchronizedPost() {
+        return synchronizedPost;
+    }
+
+    public void setSynchronizedPost(long synchronizedPost) {
+        setSP(synchronizedPost);
+    }
+
+
+    protected void setSP(long synchronizedPost) {
+        this.synchronizedPost = synchronizedPost;
+        this.noSynchronizedPost = false;
     }
 }
