@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class GammaForGOST_Parallel extends GammaForGOST {
 
-    private ArrayList<Long> encryptText = new ArrayList<Long>();
+    private volatile List<Long> encryptText = new ArrayList<Long>();
     private int numberOfThread = 0;
 
 
@@ -53,7 +53,8 @@ public class GammaForGOST_Parallel extends GammaForGOST {
     //////////////////////////////////////////////////////////
     ///  Method addToET
     /////////////////////////////////////////////////////////
-    private void addToET(int index, long eText){
+    synchronized private void addToET(int index, long eText){
+        this.encryptText.remove(index);
         this.encryptText.add(index, eText);
     }
 
@@ -61,7 +62,7 @@ public class GammaForGOST_Parallel extends GammaForGOST {
     //////////////////////////////////////////////////////////
     ///  Method getEncryptText
     /////////////////////////////////////////////////////////
-    public ArrayList<Long> getEncryptText() {
+    public List<Long> getEncryptText() {
         return encryptText;
     }
 
@@ -70,7 +71,8 @@ public class GammaForGOST_Parallel extends GammaForGOST {
     /////////////////////////////////////////////////////////
     @Override
     public List<Long> cryptForGama() {
-        List<Long> spList = new ArrayList<Long>();
+
+        this.encryptText.addAll(super.textList);
         List<Thread> myThreads = new ArrayList<Thread>();
 
         if(super.noSynchronizedPost){
@@ -86,7 +88,7 @@ public class GammaForGOST_Parallel extends GammaForGOST {
 
         int i = 0;
         while (i < super.textList.size()){
-            for(int k = 0; k < this.numberOfThread; k++){
+            for(int k = 0; k < not; k++){
                 if(i < super.textList.size()) {
 
                     long nL = ((sp & (super.C232 - 1)) + super.C1) & (super.C232 - 1);                  //выполняем приращение sp
@@ -94,6 +96,7 @@ public class GammaForGOST_Parallel extends GammaForGOST {
                     sp = (nH << 32) | nL;
 
                     myThreads.add(new Thread(new MyThread(i, super.textList.get(i), sp, super.keys, super.sBox)));
+                    myThreads.get(k).start();
                     i++;
                 }
             }
@@ -139,4 +142,19 @@ public class GammaForGOST_Parallel extends GammaForGOST {
             addToET(this.index,(gama ^ this.openText));
         }
     }
+
+
+
+    //////////////////////////////////////////////////////////
+    ///  Methods for synchronized post
+    /////////////////////////////////////////////////////////
+    //-----Begin--------------------
+    public int getNumberOfThread() {
+        return numberOfThread;
+    }
+
+    public void setNumberOfThread(int numberOfThread) {
+        this.numberOfThread = numberOfThread;
+    }
+    //-----End-----------------------
 }

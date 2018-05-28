@@ -30,7 +30,7 @@ public class GammaForGOST {
     protected long[] keys;
     //-----Keys end-----------------
 
-    //-----Sbox begin-----------------
+    //-----Sbox begin---------------
     protected int[][] sBox;
     //-----Sbox end-----------------
 
@@ -214,6 +214,10 @@ public class GammaForGOST {
 //        return spList;
 //    }
 
+    //////////////////////////////////////////////////////////
+    ///  Methods for synchronized post
+    /////////////////////////////////////////////////////////
+    //-----Begin--------------------
     public long getSynchronizedPost() {
         return synchronizedPost;
     }
@@ -227,4 +231,5 @@ public class GammaForGOST {
         this.synchronizedPost = synchronizedPost;
         this.noSynchronizedPost = false;
     }
+    //-----End----------------------
 }
