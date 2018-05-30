@@ -34,7 +34,8 @@ public class Test_Class {
                 "1\t ---GOST;\n" +
                 "2\t ---Graphic test of random;\n" +
                 "3\t ---Gamma test;\n" +
-                "4\t ---Gamma test parallel.\n";
+                "4\t ---Gamma test parallel;\n" +
+                "5\t ---Parallel run test.\n";
 
 
         int i;
@@ -60,6 +61,9 @@ public class Test_Class {
                     break;
                 case 4:
                     gamaTestParallel();
+                    break;
+                case 5:
+                    parallelRunTest();
                     break;
                 default:
                     break;
@@ -175,6 +179,10 @@ public class Test_Class {
         System.out.println();
     }
 
+
+    private static void parallelRunTest() {
+        new Parallel_Run_Test().test();
+    }
 
     private static void gamaTestParallel() {
         long data = 0xfedcba9876543210L;
