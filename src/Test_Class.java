@@ -180,10 +180,6 @@ public class Test_Class {
     }
 
 
-    private static void parallelRunTest() {
-        new Parallel_Run_Test().test();
-    }
-
     private static void gamaTestParallel() {
         long data = 0xfedcba9876543210L;
         List<Long> dataList = new ArrayList<Long>();
@@ -224,5 +220,9 @@ public class Test_Class {
             System.out.printf("%x%n", item);
         }
         System.out.println();
+    }
+
+    private static void parallelRunTest() {
+        new Parallel_Run_Test(1, 100).test();
     }
 }

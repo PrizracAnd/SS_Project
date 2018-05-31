@@ -127,17 +127,17 @@ public class Parallel_Run_Test {
 
         System.out.printf("%-10s", "Threads:");
         for (int i = 0; i < this.countOfThreads; i++) {
-            System.out.printf("%6d", (i + 1));
+            System.out.printf("%6d%-3s", (i + 1), "");
         }
 
         System.out.printf("%n%-10s", "Time:");
         for (int i = 0; i < this.countOfThreads; i++) {
-            System.out.printf("%6x", parallelTime[i]);
+            System.out.printf("%6d%-3s", parallelTime[i], "");
         }
 
         System.out.printf("%n%-10s", "Speedup:");
         for (int i = 0; i < this.countOfThreads; i++) {
-            System.out.printf("%6.3f", ku[i]);
+            System.out.printf("%6.3f%-3s", ku[i], "");
         }
 
         System.out.println("\n-----------------------------------------------------");
@@ -153,19 +153,19 @@ public class Parallel_Run_Test {
 
         sb.append("OS: ");
         sb.append(System.getProperty("os.name"));
-        sb.append("<br/>");
+        sb.append("\n");
         sb.append("Version: ");
         sb.append(System.getProperty("os.version"));
-        sb.append("<br/>");
-        sb.append(": ");
+        sb.append("\n");
+        sb.append("CPU: ");
         sb.append(System.getProperty("os.arch"));
-        sb.append("<br/>");
+        sb.append("\n");
         sb.append("Available processors (cores): ");
         sb.append(runtime.availableProcessors());
-        sb.append("<br/>");
+        sb.append("\n");
         sb.append("Max memory: ");
         sb.append(format.format(runtime.maxMemory() / 1024));
-        sb.append("<br/>");
+        sb.append("\n");
 
         System.out.println("Systems behavior:");
         System.out.println(sb.toString());
