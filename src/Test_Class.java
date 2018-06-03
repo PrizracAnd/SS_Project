@@ -1,7 +1,6 @@
-import crypto.GOST;
-import crypto.GammaForGOST;
-import crypto.GammaForGOST_Parallel;
+import crypto.*;
 
+import java.security.Key;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +10,8 @@ import java.util.Scanner;
 public class Test_Class {
     static Scanner cs = new Scanner(System.in);
 
-
-
     static long C232 = GammaForGOST.C232;
+    static long data = 0xfedcba9876543210L;
     static long[] keys = {         /*8 подключей из ГОСТ Р 34.12 - 2015 */
             0xffeeddcc, 0xbbaa9988, 0x77665544, 0x33221100, 0xf0f1f2f3, 0xf4f5f6f7, 0xf8f9fafb, 0xfcfdfeff };
 
@@ -28,6 +26,10 @@ public class Test_Class {
             {1, 7, 14, 13, 0, 5, 8, 3, 4, 15, 10, 6, 9, 12, 11, 2}
     };
 
+
+    //////////////////////////////////////////////////////////
+    ///  Method PSWM
+    /////////////////////////////////////////////////////////
     public static void main(String[] args) {
         String messageText = "Please select the test:\n" +
                 "0\t ---exit;\n" +
@@ -35,7 +37,9 @@ public class Test_Class {
                 "2\t ---Graphic test of random;\n" +
                 "3\t ---Gamma test;\n" +
                 "4\t ---Gamma test parallel;\n" +
-                "5\t ---Parallel run test.\n";
+                "5\t ---Parallel run test;\n" +
+                "6\t ---RSA test;\n" +
+                "7\t ---Hash test;\n";
 
 
         int i;
@@ -65,12 +69,22 @@ public class Test_Class {
                 case 5:
                     parallelRunTest();
                     break;
+                case 6:
+                    testRSA();
+                    break;
+                case 7:
+                    testHach();
+                    break;
                 default:
                     break;
             }
         }while (i != 0);
     }
 
+
+    //////////////////////////////////////////////////////////
+    ///  Method testGOST --1
+    /////////////////////////////////////////////////////////
     private static void testGOST() {
         long data = 0xfedcba9876543210L;
         GOST gost = new GOST(data, keys, sBox);
@@ -92,6 +106,10 @@ public class Test_Class {
 
     }
 
+
+    //////////////////////////////////////////////////////////
+    ///  Method graphicTest --2
+    /////////////////////////////////////////////////////////
     private static void graphicTest() {
         //Count of random numbers:
         int col = 100;
@@ -143,6 +161,10 @@ public class Test_Class {
         gtr.test(nameC, c);
     }
 
+
+    //////////////////////////////////////////////////////////
+    ///  Method gamaTest --3
+    /////////////////////////////////////////////////////////
     private static void gamaTest() {
         long data = 0xfedcba9876543210L;
         List<Long> dataList = new ArrayList<Long>();
@@ -180,6 +202,9 @@ public class Test_Class {
     }
 
 
+    //////////////////////////////////////////////////////////
+    ///  Method gamaTestParallel --4
+    /////////////////////////////////////////////////////////
     private static void gamaTestParallel() {
         long data = 0xfedcba9876543210L;
         List<Long> dataList = new ArrayList<Long>();
@@ -200,7 +225,7 @@ public class Test_Class {
         encryptDataList = gfgp.cryptForGama();
         sp = gfgp.getSynchronizedPost();
 
-        System.out.println("%nOpen text:");
+        System.out.println("\nOpen text:");
         for (long item: dataList){
             System.out.printf("%x%n", item);
         }
@@ -222,7 +247,101 @@ public class Test_Class {
         System.out.println();
     }
 
+
+    //////////////////////////////////////////////////////////
+    ///  Method  parallelRunTest --5
+    /////////////////////////////////////////////////////////
     private static void parallelRunTest() {
-        new Parallel_Run_Test(1, 100).test();
+        new Parallel_Run_Test(1, 32).test();
+    }
+
+    //////////////////////////////////////////////////////////
+    ///  Method  testRSA --6
+    /////////////////////////////////////////////////////////
+    private static void testRSA() {
+        byte[] encryptBytes;
+
+        //---preparing data
+        byte[] openBytes = new byte[8];
+        for(int i = 0; i < 8; i++){
+            openBytes[i] = (byte)((data >>> (8 * i)) & 255);
+        }
+
+        System.out.println("\nOpen text:");
+        for(byte item: openBytes){
+            System.out.printf("%x", item);
+        }
+
+
+        RSA rsa = new RSA();
+
+        //---get keys
+        Key[] keys = rsa.getKeys();
+
+        //---encrypt
+        encryptBytes = rsa.encrypt(openBytes, keys[0]);
+
+        System.out.println("\nEncrypt text:");
+        for(byte item: encryptBytes){
+            System.out.printf("%x", item);
+        }
+
+        //---decrypt
+        openBytes = rsa.decrypt(encryptBytes, keys[1]);
+        System.out.println("\nDecrypt text:");
+        for(byte item: openBytes){
+            System.out.printf("%x", item);
+        }
+        System.out.println();
+    }
+
+
+    //////////////////////////////////////////////////////////
+    ///  Method testHach --7
+    /////////////////////////////////////////////////////////
+    private static void testHach() {
+        boolean l = true;
+        byte[] bytes;
+        byte[] bytes1;
+
+        //---preparing data
+        byte[] openBytes = new byte[8];
+        for(int i = 0; i < 8; i++){
+            openBytes[i] = (byte)((data >>> (8 * i)) & 255);
+        }
+
+        System.out.println("\nOpen text:");
+        for(byte item: openBytes){
+            System.out.printf("%x", item);
+        }
+
+        Hash hash = new Hash(Hash.SHA512);
+
+        //---get hash
+        bytes = hash.getHash(openBytes);
+        bytes1 = hash.getHash(openBytes);
+
+        System.out.println("\nHash 1:");
+        for(byte item: bytes){
+            System.out.printf("%x", item);
+        }
+
+        System.out.println("\nHash 2:");
+        for(byte item: bytes){
+            System.out.printf("%x", item);
+        }
+
+        //---verification
+        if(bytes.length == bytes1.length){
+            for (int i = 0; i < bytes.length; i++){
+                if(bytes[i] != bytes[i]){
+                    l = false;
+                    break;
+                }
+
+            }
+        }
+
+        System.out.printf("%n%s%b%n%n", "Is identically: ", l);
     }
 }
