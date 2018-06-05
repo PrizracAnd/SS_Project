@@ -10,6 +10,8 @@ class MakeDBFile implements IConstants {
 
 
     public static final String NAME_TABLE_USERS = "users";
+    public static final String NAME_TABLE_KEYS = "keys";
+
 
     //-----Create_instruction_begin-----------------
     private final String SQL_CREATE_TABLE_USERS =
@@ -19,6 +21,13 @@ class MakeDBFile implements IConstants {
         " login  NCHAR(55)  NOT NULL," +                            //login пользователя
         " ip_address CHAR(15)," +                                   //ip адресс пользователя
         " isWorking CHAR(1) NOT NULL);";                            //признак легитивности пользователя (Y/N)
+
+    private final String SQL_CREATE_TABLE_KEYS =
+            "DROP TABLE IF EXISTS " + NAME_TABLE_KEYS + ";" +
+                    "CREATE TABLE " + NAME_TABLE_KEYS +
+                    "(id  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +    //id ключа
+                    " public  NCHAR(100)  NOT NULL," +                      //publicKey
+                    " secret  NCHAR(100)  NOT NULL,";                       //secretKey
     //-----Create_instruction_end-------------------
 
     //-----Inserted_instruction_begin---------------                //--может быть использовано для ввода тестовых данных

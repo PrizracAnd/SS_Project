@@ -1,5 +1,8 @@
 package db_support;
 
+import crypto.Keys;
+
+import java.security.Key;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +33,11 @@ public class Esquer implements IConstants {
         }
     }
 
+
+    //////////////////////////////////////////////////////////
+    ///  Methods insertRecord
+    /////////////////////////////////////////////////////////
+    //-----Begin--------------------
 //    public long insertRecord(String login, @Nullable String ip_address, boolean isWork){
     public void insertRecord(Account account){  // <-- сразу передаем в метод объект db_support.Account
         long id = -1;
@@ -87,6 +95,52 @@ public class Esquer implements IConstants {
         account.setIdDb(id);
     }
 
+    public void insertRecord(Keys keys) {  // <-- сразу передаем в метод объект crypto.Keys
+        long id = -1;
+
+        if (keys.getPublicKey() == null || keys.getSecretKey() == null) {     // <-- доп проверка, если ключи пустые, то сразу возвращаем -1 и выходим из метода
+            keys.setId_db(id);
+            return;
+        }
+
+        //-----Preparing fields begin-------------------------------
+        String ch = "'";
+        String publicKey = ch + keys.getPublicKey() + ch;
+        String secretKey = ch + keys.getSecretKey() + ch;
+        //-----Preparing fields end---------------------------------
+
+        Statement stmt = setConnection();
+
+        if(stmt != null){
+            try {
+                stmt.executeUpdate(
+                        "INSERT INTO " + MakeDBFile.NAME_TABLE_KEYS +
+                                " (public" +
+                                ", secret) " +
+                                "VALUES (" + publicKey +
+                                ", " + secretKey + ");"
+                );
+                ResultSet rs = stmt.executeQuery("SELECT id FROM " + MakeDBFile.NAME_TABLE_KEYS + " WHERE rowid=last_insert_rowid();");
+                if (rs.next()) {    // <-- доп проверка, что запись выборки существует
+                    id = rs.getLong(0);
+                }
+                rs.close();
+                stmt.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        }
+        if(this.connection != null) endConnection(this.connection);
+        keys.setId_db(id);
+    }
+    //-----End----------------------
+
+
+    //////////////////////////////////////////////////////////
+    ///  Methods updateRecord
+    /////////////////////////////////////////////////////////
+    //-----Begin--------------------
 //    public void updateRecord(long id_db, String login, @Nullable String ip_address, boolean isWork){
     public void updateRecord(Account account){
 
@@ -132,11 +186,30 @@ public class Esquer implements IConstants {
         if(this.connection != null) endConnection(this.connection);
     }
 
-    public void deleteAllRecord(){
+
+    public void updateRecord(Keys keys) {  // <-- сразу передаем в метод объект crypto.Keys
+
+
+        if (keys.getPublicKey() == null || keys.getSecretKey() == null) {     // <-- доп проверка, если ключи пустые, то сразу возвращаем -1 и выходим из метода
+            return;
+        }
+
+        //-----Preparing fields begin-------------------------------
+        String ch = "'";
+        String publicKey = ch + keys.getPublicKey() + ch;
+        String secretKey = ch + keys.getSecretKey() + ch;
+        //-----Preparing fields end---------------------------------
+
         Statement stmt = setConnection();
+
         if(stmt != null){
             try {
-                stmt.executeUpdate("DELETE FROM " + MakeDBFile.NAME_TABLE_USERS + ";");
+                stmt.executeUpdate(
+                        "UPDATE " + MakeDBFile.NAME_TABLE_KEYS + " SET " +
+                                " public = " + publicKey +
+                                ", secret = " + secretKey +
+                                "WHERE id = " + keys.getId_db() + ";"
+                );
 
                 stmt.close();
             } catch (SQLException e) {
@@ -145,21 +218,68 @@ public class Esquer implements IConstants {
         }
         if(this.connection != null) endConnection(this.connection);
     }
+    //-----End----------------------
 
-    public void deleteRecord(long id){
-        Statement stmt = setConnection();
-        if(stmt != null){
-            try {
-                stmt.executeUpdate("DELETE FROM " + MakeDBFile.NAME_TABLE_USERS + "WHERE id = " + id + ";");
 
-                stmt.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+    //////////////////////////////////////////////////////////
+    ///  Methods deleteRecord
+    /////////////////////////////////////////////////////////
+    //-----Begin--------------------
+    public void deleteAllRecord(String tableName){
+        switch (tableName){
+            case MakeDBFile.NAME_TABLE_USERS:
+                break;
+            case MakeDBFile.NAME_TABLE_KEYS:
+                break;
+            default:
+                tableName = null;
         }
-        if(this.connection != null) endConnection(this.connection);
+
+        if(tableName != null) {
+            Statement stmt = setConnection();
+            if (stmt != null) {
+                try {
+                    stmt.executeUpdate("DELETE FROM " + tableName + ";");
+
+                    stmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (this.connection != null) endConnection(this.connection);
+        }
     }
 
+    public void deleteRecord(long id, String tableName){
+
+        switch (tableName){
+            case MakeDBFile.NAME_TABLE_USERS:
+                break;
+            case MakeDBFile.NAME_TABLE_KEYS:
+                break;
+            default:
+                tableName = null;
+        }
+
+        if(tableName != null) {
+            Statement stmt = setConnection();
+            if (stmt != null) {
+                try {
+                    stmt.executeUpdate("DELETE FROM " + tableName + "WHERE id = " + id + ";");
+
+                    stmt.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (this.connection != null) endConnection(this.connection);
+        }
+    }
+
+
+    //////////////////////////////////////////////////////////
+    ///  Method getAllRecordsAccounts
+    /////////////////////////////////////////////////////////
     public List<Account> getAllRecordsAccounts(){
         List<Account> la = new ArrayList<Account>();    // <-- нельзя создать объект класса List напрямую,
                                                         // однако, можно создать его путем создания его потомка
@@ -185,6 +305,30 @@ public class Esquer implements IConstants {
         }
 
         return la;
+    }
+
+
+    //////////////////////////////////////////////////////////
+    ///  Method getAllRecordsKeys
+    /////////////////////////////////////////////////////////
+    public List<Keys> getAllRecordsKeys(){
+        List<Keys> lk = new ArrayList<Keys>();
+
+        Statement stmt = setConnection();
+        if (stmt != null){
+            try {
+                ResultSet rs = stmt.executeQuery("SELECT * FROM " + MakeDBFile.NAME_TABLE_KEYS + ";");
+                while (rs.next()){
+                    Keys keys = new Keys((Key)rs.getByte(1), (Key)rs.getByte(2), rs.getLong(0));
+                    // Добавляем объект в List:
+                    la.add(account);
+                }
+            }catch (SQLException e){
+                e.printStackTrace();
+            }
+        }
+
+        return lk;
     }
 
 }
