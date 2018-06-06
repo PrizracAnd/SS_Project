@@ -85,6 +85,8 @@ class MakeDBFile implements IConstants {
             if(stmt  != null) {
                 // create table
                 stmt.executeUpdate(SQL_CREATE_TABLE_USERS);
+                stmt.executeUpdate(SQL_CREATE_TABLE_KEYS);
+
 
                 // insert record(s)                         //--может быть использовано для ввода тестовых данных
 //                stmt.executeUpdate(SQL_INSERT_MIKE);

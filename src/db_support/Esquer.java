@@ -105,8 +105,8 @@ public class Esquer implements IConstants {
 
         //-----Preparing fields begin-------------------------------
         String ch = "'";
-        String publicKey = ch + keys.getPublicKey() + ch;
-        String secretKey = ch + keys.getSecretKey() + ch;
+        String publicKey = ch + keys.getPublicKeyString() + ch;
+        String secretKey = ch + keys.getSecretKeyString() + ch;
         //-----Preparing fields end---------------------------------
 
         Statement stmt = setConnection();
@@ -196,8 +196,8 @@ public class Esquer implements IConstants {
 
         //-----Preparing fields begin-------------------------------
         String ch = "'";
-        String publicKey = ch + keys.getPublicKey() + ch;
-        String secretKey = ch + keys.getSecretKey() + ch;
+        String publicKey = ch + keys.getPublicKeyString() + ch;
+        String secretKey = ch + keys.getSecretKeyString() + ch;
         //-----Preparing fields end---------------------------------
 
         Statement stmt = setConnection();
@@ -319,9 +319,12 @@ public class Esquer implements IConstants {
             try {
                 ResultSet rs = stmt.executeQuery("SELECT * FROM " + MakeDBFile.NAME_TABLE_KEYS + ";");
                 while (rs.next()){
-                    Keys keys = new Keys((Key)rs.getByte(1), (Key)rs.getByte(2), rs.getLong(0));
+                    Keys keys = new Keys();
+                    keys.setId_db(rs.getLong(0));
+                    keys.setPublicKeyFromString(rs.getString(1), null);
+                    keys.setSecretKeyFromString(rs.getString(2), null);
                     // Добавляем объект в List:
-                    la.add(account);
+                    lk.add(keys);
                 }
             }catch (SQLException e){
                 e.printStackTrace();

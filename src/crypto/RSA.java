@@ -7,6 +7,7 @@ import java.security.*;
 import java.util.List;
 
 public class RSA {
+    public final static String NAME_OF_RSA = "RSA";
     private Cipher cipher;
     private String cryptoSystem;
 

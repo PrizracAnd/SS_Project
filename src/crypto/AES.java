@@ -1,9 +1,13 @@
+package crypto;
+
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class AES {
+    public final static String NAME_OF_AES = "AES";
+
     public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         String s = "Hello world";
         System.out.println(s + "\n");
