@@ -27,7 +27,8 @@ class MakeDBFile implements IConstants {
                     "CREATE TABLE " + NAME_TABLE_KEYS +
                     "(id  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +    //id ключа
                     " public  NCHAR(100)  NOT NULL," +                      //publicKey
-                    " secret  NCHAR(100)  NOT NULL,";                       //secretKey
+                    " secret  NCHAR(100)  NOT NULL," +                      //secretKey
+                    " lastTime INTEGER NOT NULL);";
     //-----Create_instruction_end-------------------
 
     //-----Inserted_instruction_begin---------------                //--может быть использовано для ввода тестовых данных

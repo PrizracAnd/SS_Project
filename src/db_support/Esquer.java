@@ -116,9 +116,11 @@ public class Esquer implements IConstants {
                 stmt.executeUpdate(
                         "INSERT INTO " + MakeDBFile.NAME_TABLE_KEYS +
                                 " (public" +
-                                ", secret) " +
+                                ", secret" +
+                                ", lastTime) " +
                                 "VALUES (" + publicKey +
-                                ", " + secretKey + ");"
+                                ", " + secretKey +
+                                ", " + keys.getLastTime() + ");"
                 );
                 ResultSet rs = stmt.executeQuery("SELECT id FROM " + MakeDBFile.NAME_TABLE_KEYS + " WHERE rowid=last_insert_rowid();");
                 if (rs.next()) {    // <-- доп проверка, что запись выборки существует
@@ -175,7 +177,7 @@ public class Esquer implements IConstants {
                                 " login = " + login +
                                 ", ip_address = " + ip_address +
                                 ", isWorking = " + isWorkStr +
-                                "WHERE id = " + account.getIdDb() + ";"
+                                " WHERE id = " + account.getIdDb() + ";"
                 );
 
                 stmt.close();
@@ -208,7 +210,8 @@ public class Esquer implements IConstants {
                         "UPDATE " + MakeDBFile.NAME_TABLE_KEYS + " SET " +
                                 " public = " + publicKey +
                                 ", secret = " + secretKey +
-                                "WHERE id = " + keys.getId_db() + ";"
+                                ", lastTime = " + keys.getLastTime() +
+                                " WHERE id = " + keys.getId_db() + ";"
                 );
 
                 stmt.close();
@@ -265,7 +268,7 @@ public class Esquer implements IConstants {
             Statement stmt = setConnection();
             if (stmt != null) {
                 try {
-                    stmt.executeUpdate("DELETE FROM " + tableName + "WHERE id = " + id + ";");
+                    stmt.executeUpdate("DELETE FROM " + tableName + " WHERE id = " + id + ";");
 
                     stmt.close();
                 } catch (SQLException e) {
@@ -298,10 +301,13 @@ public class Esquer implements IConstants {
                     Account account = new Account(rs.getString(1), rs.getLong(0), rs.getString(2), isWorking);
                     // Добавляем объект в List:
                     la.add(account);
+                    rs.close();
+                    stmt.close();
                 }
             }catch (SQLException e){
                 e.printStackTrace();
             }
+            if (this.connection != null) endConnection(this.connection);
         }
 
         return la;
@@ -323,12 +329,17 @@ public class Esquer implements IConstants {
                     keys.setId_db(rs.getLong(0));
                     keys.setPublicKeyFromString(rs.getString(1), null);
                     keys.setSecretKeyFromString(rs.getString(2), null);
+                    keys.setLastTime(rs.getLong(3));
                     // Добавляем объект в List:
                     lk.add(keys);
+
+                    rs.close();
+                    stmt.close();
                 }
             }catch (SQLException e){
                 e.printStackTrace();
             }
+            if (this.connection != null) endConnection(this.connection);
         }
 
         return lk;

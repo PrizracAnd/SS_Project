@@ -49,7 +49,7 @@ public class Hash {
     ///  PSWM FIXME
     /////////////////////////////////////////////////////////
     public static void main(String[] args) throws NoSuchAlgorithmException {
-        String str = "hello world";
+        String str = "hello world hello world hello world hello world";
 
         MessageDigest sha1 = MessageDigest.getInstance("SHA-256");
         MessageDigest md5 = MessageDigest.getInstance("MD5");

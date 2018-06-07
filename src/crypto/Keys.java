@@ -1,5 +1,6 @@
 package crypto;
 
+import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -10,6 +11,7 @@ public class Keys {
     private Key publicKey;
     private Key secretKey;
     private long id_db;
+    private long lastTime;
 
     //////////////////////////////////////////////////////////
     ///  Constructors
@@ -25,7 +27,14 @@ public class Keys {
         this.secretKey = secretKey;
     }
 
-    public Keys(Key publicKey, Key secretKey, long id_db) {
+    public Keys(Key publicKey, Key secretKey, long id_db, long lastTime) {
+        this.publicKey = publicKey;
+        this.secretKey = secretKey;
+        this.id_db = id_db;
+        this.lastTime = lastTime;
+    }
+
+    public Keys(Key publicKey, Key secretKey, long lastTime) {
         this.publicKey = publicKey;
         this.secretKey = secretKey;
         this.id_db = id_db;
@@ -77,6 +86,15 @@ public class Keys {
     public String getPublicKeyString(){
         return convertKeyToString(this.publicKey);
     }
+
+    public long getLastTime() {
+        return lastTime;
+    }
+
+    public void setLastTime(long lastTime) {
+        this.lastTime = lastTime;
+    }
+
     //-----Getters/Setters end------
 
 
@@ -88,7 +106,7 @@ public class Keys {
         return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 
-    private Key convertStringToKey(String str, @Nullable String cryptoSystem){
+    private Key convertStringToKey(@NotNull String str, @Nullable String cryptoSystem){
         byte[] bytes = Base64.getDecoder().decode(str);
 
         if(cryptoSystem == null) {
