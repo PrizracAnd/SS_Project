@@ -2,10 +2,8 @@ package cs_support;
 
 import com.sun.deploy.util.ArrayUtil;
 import com.sun.istack.internal.Nullable;
-import crypto.AES;
-import crypto.GOST;
-import crypto.GammaForGOST_Parallel;
-import crypto.RSA;
+import crypto.*;
+import db_support.Account;
 import sun.security.provider.SecureRandom;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -16,10 +14,17 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Formats of message:
+ * Formats of messages:
  *  - All: messageCode(0), messageNumber(1-2), userName(3-34);
  *  - Get_PK: all;
+ *  - Send_PK: all + PK
  *  - Get_PK_USER: all + ip;
+ *  - Send_PK_USER: all + PK;
+ *  - Get_LIST_USER: all;
+ *  - SEND_LIST_USER: all + Post: [username - 32 bt, ip - 30 bt],[--||--], ... , [--||--];
+ *  - Get_STATUS: all;
+ *  - Send_STATUS: all;
+ *  - Send_FILE: all + Post: encryptFile
  */
 
 public class Message {
@@ -28,12 +33,16 @@ public class Message {
 
     public final static byte GET_MESSAGE = -1;
     public final static byte GET_PK = 0;
+    public final static byte SEND_PK = 1;
     public final static byte INCOM_PK = 1;
     public final static byte GET_PK_USER = 2;
+    public final static byte SEND_PK_USER = 3;
     public final static byte INCOM_PK_USER = 3;
     public final static byte GET_LIST_USER = 4;
+    public final static byte SEND_LIST_USER = 5;
     public final static byte INCOM_LIST_USER = 5;
     public final static byte GET_STATUS = 6;
+    public final static byte SEND_STATUS = 7;
     public final static byte INCOM_STATUS = 7;
     public final static byte SEND_FILE = 8;
     public final static byte INCOM_FILE = 8;
@@ -62,6 +71,7 @@ public class Message {
     public Message(byte[] message, Key secretKey) {
         this.message = message;
         this.secretKey = secretKey;
+        decryptMessage();
     }
     //-----Constructors end---------
 
@@ -71,13 +81,14 @@ public class Message {
     /////////////////////////////////////////////////////////
     //-----Getters/Setters begin----
 
-    public byte[] getMessage(byte messageCode, @Nullable String ip, @Nullable byte[] fileMessage) {
-        if(messageCode > GET_MESSAGE) createMessage(messageCode, ip, fileMessage);
+    public byte[] getMessage(byte messageCode, @Nullable String ip, @Nullable byte[] messagePost) {
+        if(messageCode > GET_MESSAGE) createMessage(messageCode, ip, messagePost);
         return message;
     }
 
     public void setMessage(byte[] message) {
         this.message = message;
+        decryptMessage();
     }
 
     public int getMessageNumber() {
@@ -142,39 +153,80 @@ public class Message {
     //////////////////////////////////////////////////////////
     ///  Method createMessage
     /////////////////////////////////////////////////////////
-    private void createMessage(byte messageCode, @Nullable String ip, @Nullable byte[] fileMessage){
+    private void createMessage(byte messageCode, @Nullable String ip, @Nullable byte[] messagePost){
 //        SecureRandom random = new SecureRandom();
         RSA rsa = new RSA();
         byte[] bytes;
 
         switch (messageCode){
             case GET_PK:                 //---GET_PK
-//                random.engineNextBytes(this.messageNumber);
+
                 bytes = getBasicMessage(GET_PK, true);
                 byte[] bytes1 = new byte[32];
                 Arrays.fill(bytes1, (byte) 0);
                 System.arraycopy(bytes, 3, bytes1, 0, bytes1.length);
                 this.message = bytes;
+
                 break;
+
             case GET_PK_USER:
+
                 bytes = getBasicMessage(GET_PK_USER, true);
                 byte[] ipBytes = ip.getBytes();
                 bytes = addByteArray(bytes, ipBytes);
                 this.message = rsa.encrypt(bytes, publicKey);
+
                 break;
             case GET_LIST_USER:
+
                 bytes = getBasicMessage(GET_LIST_USER, true);
                 this.message = rsa.encrypt(bytes, publicKey);
+
                 break;
+
             case GET_STATUS:
+
                 bytes = getBasicMessage(GET_STATUS, true);
                 this.message = rsa.encrypt(bytes, publicKey);
+
                 break;
-            case SEND_FILE:
-                bytes = getBasicMessage(SEND_FILE, true);
-                bytes = addByteArray(bytes, fileMessage);
+
+            case SEND_PK:
+
+                bytes = getBasicMessage(SEND_PK, true, messagePost);
                 this.message = rsa.encrypt(bytes, publicKey);
+
                 break;
+
+            case SEND_PK_USER:
+
+                bytes = getBasicMessage(SEND_PK_USER, true, messagePost);
+                this.message = rsa.encrypt(bytes, publicKey);
+
+                break;
+            case SEND_LIST_USER:
+
+                bytes = getBasicMessage(SEND_LIST_USER, true, messagePost);
+                this.message = rsa.encrypt(bytes, publicKey);
+
+                break;
+            case SEND_STATUS:
+
+                bytes = getBasicMessage(SEND_STATUS, true);
+                this.message = rsa.encrypt(bytes, publicKey);
+
+                break;
+
+            case SEND_FILE:
+
+                bytes = getBasicMessage(SEND_FILE, true, messagePost);
+                byte[] hashBytes = (new Hash()).getHash(bytes);
+                bytes = addByteArray(bytes, hashBytes);
+                bytes = rsa.encrypt(bytes, publicKey);
+                this.message = bytes;
+
+                break;
+
             default:
                 break;
         }
@@ -182,8 +234,9 @@ public class Message {
 
 
     //////////////////////////////////////////////////////////
-    ///  Method getBasicMessage
+    ///  Methods getBasicMessage
     /////////////////////////////////////////////////////////
+    //-----Begin--------------------
     private byte[] getBasicMessage(byte messageCode, boolean isUpdateMessageNumber){
         if(isUpdateMessageNumber){
             new SecureRandom().engineNextBytes(this.messageNumber);
@@ -196,7 +249,26 @@ public class Message {
         return bytes;
     }
 
+    private byte[] getBasicMessage(byte messageCode, boolean isUpdateMessageNumber, byte[] messagePost){
+        if(isUpdateMessageNumber){
+            new SecureRandom().engineNextBytes(this.messageNumber);
+        }
 
+        byte[] bytes = new byte[35];
+        bytes[0] = messageCode;
+        System.arraycopy(bytes, 1, this.messageNumber, 0, 2);
+        System.arraycopy(bytes, 3, this.userName, 0, 32);
+        return addByteArray(bytes, messagePost);
+    }
+    //-----End----------------------
+
+    //////////////////////////////////////////////////////////
+    ///  Method decryptMessage
+    /////////////////////////////////////////////////////////
+    private void decryptMessage(){
+        RSA rsa = new RSA();
+        this.message = rsa.decrypt(this.message, this.secretKey);
+    }
 
     //////////////////////////////////////////////////////////
     ///  Method addByteArray
@@ -209,6 +281,7 @@ public class Message {
 
         return rez;
     }
+
 
     //////////////////////////////////////////////////////////
     ///  Methods getFromMessage
@@ -275,6 +348,65 @@ public class Message {
 
         return new SecretKeySpec(bytes, 0, bytes.length, cryptoSystem);
     }
+
+    public List<Account> getFromMessageUserList(){
+        List<Account> accountList = new ArrayList<Account>();
+
+        if(this.message.length > 35) {
+            int k = 35;
+            while ((k + 62) <= this.message.length){
+                byte[] bytes = new byte[32];
+                System.arraycopy(bytes, 0, this.message, k, 32);
+                int l = 0;
+                for (int i = 31; i > -1; i--){
+                    if(bytes[i] != 0){
+                        l = i + 1;
+                        break;
+                    }
+                }
+                System.arraycopy(bytes, 0, bytes, 0, l);
+                Account account = new Account(new String(bytes));
+                k += 32;
+
+                System.arraycopy(bytes, 0, this.message, k, 30);
+                l = 0;
+                for (int i = 29; i > -1; i--){
+                    if(bytes[i] != 0){
+                        l = i + 1;
+                        break;
+                    }
+                }
+                System.arraycopy(bytes, 0, bytes, 0, l);
+                account.setIpAddress(new String(bytes));
+
+                accountList.add(account);
+            }
+        }
+
+        return accountList;
+    }
+
+    public byte[] getFromMessageEncryptPost() {
+        byte[] bytes = getFromMessagePost();
+        if (bytes.length > 32) {
+            System.arraycopy(bytes, 0, bytes, 0, bytes.length - 32);
+        }else bytes = new byte[0];
+
+        return bytes;
+    }
+
+    public boolean getFromMessageIsHashOk(){
+        boolean l = false;
+        if(this.message.length > 67){
+            byte[] hashBetes = new  byte[32];
+            System.arraycopy(hashBetes, 0, this.message, this.message.length - 32, 32);
+            byte[] bytes = new byte[this.message.length - 32];
+            System.arraycopy(bytes, 0, this.message, 0, this.message.length - 32);
+            l = Arrays.equals(hashBetes,(new Hash()).getHash(bytes));
+        }
+
+        return l;
+    }
     //-----End----------------------
 
 
@@ -282,29 +414,39 @@ public class Message {
     ///  Methods util
     /////////////////////////////////////////////////////////
     //-----Begin--------------------
-    public byte[] utilGetKeysForGOST_FromKey(Key key){
-        byte[] keys = new byte[8];
+    public long[] utilGetKeysForGOST_FromKey(Key key){
+        long[] keys = new long[8];
+        Arrays.fill(keys, (long) 0);
         byte[] bytesKey = key.getEncoded();
+        byte[] bytes = new byte[64];
 
         if(bytesKey.length == 0){
-            Arrays.fill(keys, (byte) 0);
             return keys;
         }
 
 
-        if (bytesKey.length > 7){
-            System.arraycopy(keys, 0, bytesKey, 0, 8);
+        if (bytesKey.length >= 64){
+            System.arraycopy(bytes, 0, bytesKey, 0, 64);
         }else {
-            System.arraycopy(keys, 0, bytesKey, 0, bytesKey.length);
+            System.arraycopy(bytes, 0, bytesKey, 0, bytesKey.length);
             int k = bytesKey.length;
-            while (k < 8){
+            while (k < 64){
                 for(byte byteKey: bytesKey){
-                    keys[k] = (byte)(byteKey + 1);
+                    bytes[k] = (byte)(byteKey + 1);
                     k++;
-                    if(k == 8){
+                    if(k == 64){
                         break;
                     }
                 }
+            }
+        }
+
+        int k = 0;
+        for(long item: keys){
+            for (int i = 0; i < 8; i++){
+                if(k >= bytes.length) break;
+                item |= (long)bytes[k] << (i * 8);
+                k++;
             }
         }
 
@@ -361,6 +503,72 @@ public class Message {
         return addByteArray(spBytes, encryptText);
 
     }
+
+    public byte[] utilGetDecpritTextFromPost(byte[] encryptText, long[] keys, int[][] sBox){
+        byte[] openText = new byte[0];
+        List<Long> decryptList = new ArrayList<Long>();
+
+        if(encryptText.length > 8){
+            long sp = 0;
+            for (int i =0; i < 8; i++){
+                sp |= (long)encryptText[i] << (i * 8);
+            }
+
+            int k = 8;
+            while (k < encryptText.length) {
+                List<Long> dataList = new ArrayList<Long>();
+                do {
+                    long item = 0;
+                    for (int i = 0; i < 8; i++) {
+                        item |= (long) encryptText[k] << (8 * i);
+                        k++;
+                        if (k >= encryptText.length) break;
+                    }
+                    dataList.add(item);
+                } while (dataList.size() < 128 && k < encryptText.length);
+
+                GammaForGOST_Parallel gfgp = new GammaForGOST_Parallel(dataList, keys, sBox, sp);
+                gfgp.setNumberOfThread(17);
+                decryptList.addAll(gfgp.cryptForGama());
+            }
+
+            openText = new byte[encryptText.length - 8];
+            k = 0;
+            while (k < openText.length){
+                for(long item: decryptList){
+                    for(int i = 0; i < 8; i++){
+                        openText[k] = (byte)((item >>> (8 * i)) % 256);
+                        k++;
+                        if(k >= openText.length) break;
+                    }
+                    if(k >= openText.length) break;
+                }
+            }
+
+        }
+
+        return openText;
+    }
+
+    public byte[] utilGetMessageFromUserList(List<Account> accounts){
+        byte[] bytes = new byte[62 * accounts.size()];
+
+        int k = 0;
+
+        for(Account item: accounts){
+            byte[] bt = item.getUserName().getBytes();
+            System.arraycopy(bytes, k, bt, 0, (bt.length > 32) ? 32 : bt.length);
+            k += 32;
+
+            bt = item.getIpAddress().getBytes();
+            System.arraycopy(bytes, k, bt, 0, (bt.length > 30) ? 30 : bt.length);
+            k += 30;
+        }
+
+        return bytes;
+    }
+
+
 
     //-----End----------------------
 }
