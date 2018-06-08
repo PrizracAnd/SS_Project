@@ -1,13 +1,11 @@
 package cs_support;
 
-import com.sun.deploy.util.ArrayUtil;
 import com.sun.istack.internal.Nullable;
 import crypto.*;
 import db_support.Account;
 import sun.security.provider.SecureRandom;
 
 import javax.crypto.spec.SecretKeySpec;
-import java.lang.reflect.Array;
 import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +22,9 @@ import java.util.List;
  *  - SEND_LIST_USER: all + Post: [username - 32 bt, ip - 30 bt],[--||--], ... , [--||--];
  *  - Get_STATUS: all;
  *  - Send_STATUS: all;
- *  - Send_FILE: all + Post: encryptFile
+ *  - Send_FILE: all + Post: encryptFile - ~bt + Hash of encryptFile - 32 bt;
+ *  - Get_SK: all;
+ *  - Send_SK: all + SK.
  */
 
 public class Message {
@@ -46,6 +46,9 @@ public class Message {
     public final static byte INCOM_STATUS = 7;
     public final static byte SEND_FILE = 8;
     public final static byte INCOM_FILE = 8;
+    public final static byte GET_SK = 9;
+    public final static byte SEND_SK = 10;
+    public final static byte INCOM_SK = 10;
     //-----Constants end------------
 
     private byte[] message;
@@ -224,6 +227,20 @@ public class Message {
                 bytes = addByteArray(bytes, hashBytes);
                 bytes = rsa.encrypt(bytes, publicKey);
                 this.message = bytes;
+
+                break;
+
+            case GET_SK:
+
+                bytes = getBasicMessage(GET_SK, true);
+                this.message = rsa.encrypt(bytes, publicKey);
+
+                break;
+
+            case SEND_SK:
+
+                bytes = getBasicMessage(SEND_SK, true, messagePost);
+                this.message = rsa.encrypt(bytes, publicKey);
 
                 break;
 

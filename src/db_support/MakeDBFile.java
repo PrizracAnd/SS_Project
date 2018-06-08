@@ -25,10 +25,10 @@ class MakeDBFile implements IConstants {
     private final String SQL_CREATE_TABLE_KEYS =
             "DROP TABLE IF EXISTS " + NAME_TABLE_KEYS + ";" +
                     "CREATE TABLE " + NAME_TABLE_KEYS +
-                    "(id  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +    //id ключа
-                    " public  NCHAR(100)  NOT NULL," +                      //publicKey
-                    " secret  NCHAR(100)  NOT NULL," +                      //secretKey
-                    " lastTime INTEGER NOT NULL);";
+                    "(id  INTEGER PRIMARY KEY NOT NULL," +                  //id ключа {совпадает с id юзера}
+                    " public  NCHAR(100)," +                                //publicKey
+                    " secret  NCHAR(100)," +                                //secretKey
+                    " lastTime INTEGER);";
     //-----Create_instruction_end-------------------
 
     //-----Inserted_instruction_begin---------------                //--может быть использовано для ввода тестовых данных

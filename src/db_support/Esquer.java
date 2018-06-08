@@ -95,18 +95,25 @@ public class Esquer implements IConstants {
         account.setIdDb(id);
     }
 
-    public void insertRecord(Keys keys) {  // <-- сразу передаем в метод объект crypto.Keys
+    public void insertRecord(Keys keys, long id_db) {  // <-- сразу передаем в метод объект crypto.Keys
         long id = -1;
 
-        if (keys.getPublicKey() == null || keys.getSecretKey() == null) {     // <-- доп проверка, если ключи пустые, то сразу возвращаем -1 и выходим из метода
+        if (keys.getPublicKey() == null && keys.getSecretKey() == null) {     // <-- доп проверка, если ключи пустые, то сразу возвращаем -1 и выходим из метода
             keys.setId_db(id);
             return;
         }
 
         //-----Preparing fields begin-------------------------------
         String ch = "'";
-        String publicKey = ch + keys.getPublicKeyString() + ch;
-        String secretKey = ch + keys.getSecretKeyString() + ch;
+        String publicKey;
+        if(keys.getPublicKeyString() == null){
+            publicKey = "NULL";
+        }else publicKey = ch + keys.getPublicKeyString() + ch;
+
+        String secretKey;
+        if(keys.getSecretKeyString() == null){
+            secretKey = "NULL";
+        }else secretKey = ch + keys.getSecretKeyString() + ch;
         //-----Preparing fields end---------------------------------
 
         Statement stmt = setConnection();
@@ -115,10 +122,12 @@ public class Esquer implements IConstants {
             try {
                 stmt.executeUpdate(
                         "INSERT INTO " + MakeDBFile.NAME_TABLE_KEYS +
-                                " (public" +
+                                " (id" +
+                                ", public" +
                                 ", secret" +
                                 ", lastTime) " +
-                                "VALUES (" + publicKey +
+                                "VALUES (" + id_db +
+                                ", " + publicKey +
                                 ", " + secretKey +
                                 ", " + keys.getLastTime() + ");"
                 );
@@ -192,14 +201,21 @@ public class Esquer implements IConstants {
     public void updateRecord(Keys keys) {  // <-- сразу передаем в метод объект crypto.Keys
 
 
-        if (keys.getPublicKey() == null || keys.getSecretKey() == null) {     // <-- доп проверка, если ключи пустые, то сразу возвращаем -1 и выходим из метода
+        if (keys.getPublicKey() == null && keys.getSecretKey() == null) {     // <-- доп проверка, если ключи пустые, то сразу возвращаем -1 и выходим из метода
             return;
         }
 
         //-----Preparing fields begin-------------------------------
         String ch = "'";
-        String publicKey = ch + keys.getPublicKeyString() + ch;
-        String secretKey = ch + keys.getSecretKeyString() + ch;
+        String publicKey;
+        if(keys.getPublicKeyString() == null){
+            publicKey = "NULL";
+        }else publicKey = ch + keys.getPublicKeyString() + ch;
+
+        String secretKey;
+        if(keys.getSecretKeyString() == null){
+            secretKey = "NULL";
+        }else secretKey = ch + keys.getSecretKeyString() + ch;
         //-----Preparing fields end---------------------------------
 
         Statement stmt = setConnection();
